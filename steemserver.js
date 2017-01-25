@@ -36,7 +36,7 @@ var findTransfers = function(callback) {
 				docs.forEach(function(value){	
 					var jsonMemo = safelyParseJSON(value.memo)
 
-					var link = parseMemo2Link(value.account, jsonMemo)
+					var link = parseMemo2Link(value.timestamp, value.account, jsonMemo)
 					
 					if(!isEmptyObject(link))
 					{
@@ -53,7 +53,7 @@ var findTransfers = function(callback) {
 	// "action" : "add",
 	// "version" : "00",
 	
-var parseMemo2Link = function(from, memo){
+var parseMemo2Link = function(timestamp, from, memo){
 	var link = {}
 
 	if(memo.type == 'bookmark' && memo.action == 'add' && memo.version == '00' )
@@ -61,6 +61,7 @@ var parseMemo2Link = function(from, memo){
 		link['from'] = from
 		link['link'] = memo.link
 		link['comment'] = memo.comment
+		link['timestamp'] = timestamp
 	}
 	
 	return link
