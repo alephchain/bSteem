@@ -14,14 +14,14 @@ app.get('/api/history', function(req, res, next) {
 })
 
 var findTransfers = function(callback) {
-	var uri = 'mongodb://steemit:steemit@mongo0.steemdata.com/Steem'
+	var uri = 'mongodb://steemit:steemit@mongo1.steemdata.com/SteemData'
 
 	MongoClient.connect(uri, function(err, db) {
 		assert.equal(null, err);
 		
 		console.log("MongoDb [C]");
 
-		db.collection('VirtualOperations').find({
+		db.collection('Operations').find({
 			//'account': 'gutzofter',
 			'type': 'transfer',
 			'to': 'msteem',
