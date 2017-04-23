@@ -13,6 +13,44 @@ app.get('/api/history', function(req, res, next) {
 	})	
 })
 
+app.get('/api/active_posts', function(req, res, next) {
+	activePosts(function(posts){
+		console.log("Found: " + posts.length)
+		res.json(posts)
+	})
+})
+
+var activePosts = function(callback) {
+	var uri = 'mongodb://steemit:steemit@mongo1.steemdata.com/SteemData'
+
+	MongoClient.connect(uri, function(err, db) {
+		assert.equal(null, err);		
+		console.log("MongoDb [C]");
+
+		var dateNow =  new Date();
+
+		var sevenDays = (24*60*60*1000) * 7
+
+		console.log("Now: " + dateNow)
+		console.log("Offset: " + new Date(dateNow.setTime(dateNow.getTime() - sevenDays)))
+
+		db.collection('Posts').aggregate({ $match: { created: { $gte: new Date(dateNow.setTime(dateNow.getTime() - sevenDays)) }}},
+			{ $project: {
+				created: 1, 
+				url: 1, 
+				tags: '$json_metadata.tags', 
+				links: '$json_metadata.links'
+			}}).toArray(function(err, docs) {
+				db.close()
+				console.log("MongoDb [D]")
+
+				callback(docs)
+
+			})
+	})
+
+}
+
 var findTransfers = function(callback) {
 	var uri = 'mongodb://steemit:steemit@mongo1.steemdata.com/SteemData'
 
