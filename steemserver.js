@@ -30,23 +30,31 @@ var activePosts = function(callback) {
 		var dateNow =  new Date();
 
 		var sevenDays = (24*60*60*1000) * 7
+		var offSetDate = new Date(dateNow - sevenDays)
 
 		console.log("Now: " + dateNow)
-		console.log("Offset: " + new Date(dateNow.setTime(dateNow.getTime() - sevenDays)))
+		console.log("Offset: " + offSetDate)
 
-		db.collection('Posts').aggregate({ $match: { created: { $gte: new Date(dateNow.setTime(dateNow.getTime() - sevenDays)) }}},
-			{ $project: {
-				created: 1, 
-				url: 1, 
-				tags: '$json_metadata.tags', 
-				links: '$json_metadata.links'
-			}}).toArray(function(err, docs) {
+		db.collection('Posts').find(
+			{ 
+				created: { $gte: offSetDate }
+			}, 
+			{ created: 1, url: 1, json_metadata: 1}
+		).toArray(function(err, docs) {
+
+			if(!err){
 				db.close()
 				console.log("MongoDb [D]")
 
-				callback(docs)
+				var posts = []
 
-			})
+				docs.forEach(function(value) {
+					parseLinks
+				})
+				
+				callback(docs)	
+			}		
+		})
 	})
 
 }
@@ -71,7 +79,6 @@ var findTransfers = function(callback) {
 				
 				var links = []
 
-
 				docs.forEach(function(value){	
 					var jsonMemo = safelyParseJSON(value.memo)
 
@@ -91,7 +98,10 @@ var findTransfers = function(callback) {
 	// "type" : "bookmark",
 	// "action" : "add",
 	// "version" : "00",
-	
+var parseLink() {
+
+}	
+
 var parseMemo2Link = function(id, timestamp, from, memo){
 	var link = {}
 
