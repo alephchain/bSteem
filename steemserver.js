@@ -3,6 +3,11 @@ var assert = require('assert');
 var express = require('express')
 var bodyParser = require('body-parser')
 
+var initialDays = (24*60*60*1000) * 2
+
+var lastDate = new Date(new Date() - initialDays)
+var lastPosts = []
+
 var app = express()
 app.use(bodyParser.json())
 
@@ -30,15 +35,31 @@ var activePosts = function(callback) {
 		console.log("MongoDb [C]");
 
 		var dateNow =  new Date();
+		var sevenDays = (24*60*60*1000) * 1
 
-		var sevenDays = (24*60*60*1000) * 7
-		var offSetDate = new Date(dateNow - sevenDays)
+		var lastRequestOffset = new Date(dateNow - initialDays)
+		var sevenDayoffSetDate = new Date(dateNow - sevenDays)
+
+		var	offSetDate = lastRequestOffset
+
+		if(sevenDayoffSetDate > lastDate)
+		{
+			offSetDate = sevenDayoffSetDate
+		}
+
+		console.log(dateNow)
+		console.log(lastRequestOffset)
+		console.log(sevenDayoffSetDate)
+		console.log(lastDate)
+		console.log(offSetDate)
+
+		lastDate = offSetDate
 
 		db.collection('Posts').find(
 			{ 
 				created: { $gte: offSetDate }
 			}, 
-			{ created: 1, url: 1, json_metadata: 1}
+			{ created: 1, author: 1, url: 1, json_metadata: 1}
 		).toArray(function(err, docs) {
 
 			if(!err){
@@ -46,16 +67,17 @@ var activePosts = function(callback) {
 				console.log("MongoDb [D]")
 
 				docs.forEach(function(value) {
-					var post = parsePost(value.created, value.url, value.json_metadata)
+					var post = parsePost(value.created, value.author, value.url, value.json_metadata)
 
 					posts.push(post)
 				})
+
+				lastPosts = posts
 				
-				callback(posts)	
+				callback(lastPosts)	
 			}		
 		})
 	})
-
 }
 
 var findTransfers = function(callback) {
@@ -97,14 +119,16 @@ var findTransfers = function(callback) {
 	// "type" : "bookmark",
 	// "action" : "add",
 	// "version" : "00",
-var parsePost = function(createDate, url, json_metadata) {
+var parsePost = function(createDate, author, url, json_metadata) {
 	var post = {}
 
-	post['createDate'] = createDate
-	post['url'] = 'https://steemit.com' + url
-	post['links'] = []
-	post['tags'] = []
-
+	post = {
+		createDate: createDate,
+		author: author,
+		url: 'https://steemit.com' + url,
+		links: [],
+		tags: []
+	}
 
 	if(!isEmptyObject(json_metadata))
 	{
