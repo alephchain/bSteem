@@ -3,9 +3,11 @@ var assert = require('assert');
 var express = require('express')
 var bodyParser = require('body-parser')
 
-var initialDays = (24*60*60*1000) * 2
+var lastDateOffset = (24*60*60*1000) * 2
+var lastRequestOffsetDate = new Date(new Date() - lastDateOffset)
 
-var lastDate = new Date(new Date() - initialDays)
+var sevenDays = (24*60*60*1000) * 1
+
 var lastPosts = []
 
 var app = express()
@@ -34,26 +36,26 @@ var activePosts = function(callback) {
 		assert.equal(null, err);		
 		console.log("MongoDb [C]");
 
-		var dateNow =  new Date();
-		var sevenDays = (24*60*60*1000) * 1
 
-		var lastRequestOffset = new Date(dateNow - initialDays)
+		var dateNow =  new Date();
+
 		var sevenDayoffSetDate = new Date(dateNow - sevenDays)
 
-		var	offSetDate = lastRequestOffset
+		var	offSetDate = lastRequestOffsetDate
 
-		if(sevenDayoffSetDate > lastDate)
+		if(sevenDays < lastDateOffset)
 		{
 			offSetDate = sevenDayoffSetDate
 		}
 
-		console.log(dateNow)
-		console.log(lastRequestOffset)
-		console.log(sevenDayoffSetDate)
-		console.log(lastDate)
-		console.log(offSetDate)
+		lastDateOffset = dateNow - offSetDate
 
-		lastDate = offSetDate
+		lastRequestOffsetDate = dateNow
+
+		console.log(dateNow)
+		console.log(offSetDate)
+		console.log(lastRequestOffsetDate)
+		console.log(sevenDayoffSetDate)
 
 		db.collection('Posts').find(
 			{ 
