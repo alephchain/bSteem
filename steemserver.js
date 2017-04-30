@@ -3,6 +3,15 @@ var assert = require('assert');
 var express = require('express')
 var bodyParser = require('body-parser')
 
+var initialOffsetDays = 8
+
+var lastDateOffset = (24*60*60*1000) * initialOffsetDays
+var lastRequestOffsetDate = new Date(new Date() - lastDateOffset)
+
+var sevenDays = (24*60*60*1000) * (initialOffsetDays - 1)
+
+var lastPosts = []
+
 var app = express()
 app.use(bodyParser.json())
 
@@ -21,47 +30,74 @@ app.get('/api/active_posts', function(req, res, next) {
 })
 
 var activePosts = function(callback) {
-	var uri = 'mongodb://steemit:steemit@mongo1.steemdata.com/SteemData'
+	var uriSteemData = 'mongodb://steemit:steemit@mongo1.steemdata.com/SteemData'
 
-	MongoClient.connect(uri, function(err, db) {
+	var newPosts = []
+
+	MongoClient.connect(uriSteemData, function(err, db) {
 		assert.equal(null, err);		
 		console.log("MongoDb [C]");
 
+
 		var dateNow =  new Date();
 
-		var sevenDays = (24*60*60*1000) * 7
-		var offSetDate = new Date(dateNow - sevenDays)
+		var sevenDayoffSetDate = new Date(dateNow - sevenDays)
+
+		var	offSetDate = lastRequestOffsetDate
+
+		if(sevenDays < lastDateOffset)
+		{
+			offSetDate = sevenDayoffSetDate
+		}
+
+		lastDateOffset = dateNow - offSetDate
+
+		lastRequestOffsetDate = dateNow
 
 		db.collection('Posts').find(
-			{ 
-				created: { $gte: offSetDate }
-			}, 
-			{ created: 1, url: 1, json_metadata: 1}
+			{ created: { $gte: offSetDate } }, 
+			{ created: 1, author: 1, url: 1, json_metadata: 1 }
 		).toArray(function(err, docs) {
 
 			if(!err){
 				db.close()
 				console.log("MongoDb [D]")
 
-				var posts = []
-
 				docs.forEach(function(value) {
-					var post = parsePost(value.created, value.url, value.json_metadata)
+					var post = parsePost(value.created, value.author, value.url, value.json_metadata)
 
-					posts.push(post)
+					newPosts.push(post)
 				})
+
+				lastPosts = insertPosts(sevenDayoffSetDate, newPosts)
 				
-				callback(posts)	
+				callback(lastPosts)	
 			}		
 		})
 	})
+}
 
+var insertPosts = function(sevenDayoffSetDate, newPosts) {
+	var newLastPosts = []
+
+	lastPosts.forEach(function(post) {
+		if(post.createDate >= sevenDayoffSetDate)
+		{
+			newLastPosts.push(post)
+		}
+	})
+
+	newPosts.forEach(function(post) {
+		newLastPosts.push(post)
+	})
+
+	return newLastPosts
 }
 
 var findTransfers = function(callback) {
-	var uri = 'mongodb://steemit:steemit@mongo1.steemdata.com/SteemData'
+	var uriSteemData = 'mongodb://steemit:steemit@mongo1.steemdata.com/SteemData'
 
-	MongoClient.connect(uri, function(err, db) {
+	MongoClient.connect(uriSteemData, function(err, db) {
 		assert.equal(null, err);
 		
 		console.log("MongoDb [C]");
@@ -97,19 +133,23 @@ var findTransfers = function(callback) {
 	// "type" : "bookmark",
 	// "action" : "add",
 	// "version" : "00",
-var parsePost = function(createDate, url, json_metadata) {
+var parsePost = function(createDate, author, url, json_metadata) {
 	var post = {}
 
-	post['createDate'] = createDate
-	post['url'] = 'https://steemit.com' + url
-	post['links'] = []
-
+	post = {
+		createDate: createDate,
+		author: author,
+		url: 'https://steemit.com' + url,
+		links: [],
+		tags: []
+	}
 
 	if(!isEmptyObject(json_metadata))
 	{
 		if(!isEmptyObject(json_metadata.links))
 		{
 			post['links'] = json_metadata.links
+			post['tags'] = json_metadata.tags
 		}
 	}
 
