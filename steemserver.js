@@ -3,10 +3,12 @@ var assert = require('assert');
 var express = require('express')
 var bodyParser = require('body-parser')
 
-var lastDateOffset = (24*60*60*1000) * 2
+var initialOffsetDays = 8
+
+var lastDateOffset = (24*60*60*1000) * initialOffsetDays
 var lastRequestOffsetDate = new Date(new Date() - lastDateOffset)
 
-var sevenDays = (24*60*60*1000) * 1
+var sevenDays = (24*60*60*1000) * (initialOffsetDays - 1)
 
 var lastPosts = []
 
