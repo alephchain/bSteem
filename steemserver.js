@@ -13,15 +13,60 @@ app.get('/api/history', function(req, res, next) {
 	})	
 })
 
+app.get('/api/active_posts', function(req, res, next) {
+	activePosts(function(posts){
+		console.log("Found: " + posts.length)
+		res.json(posts)
+	})
+})
+
+var activePosts = function(callback) {
+	var uri = 'mongodb://steemit:steemit@mongo1.steemdata.com/SteemData'
+
+	MongoClient.connect(uri, function(err, db) {
+		assert.equal(null, err);		
+		console.log("MongoDb [C]");
+
+		var dateNow =  new Date();
+
+		var sevenDays = (24*60*60*1000) * 7
+		var offSetDate = new Date(dateNow - sevenDays)
+
+		db.collection('Posts').find(
+			{ 
+				created: { $gte: offSetDate }
+			}, 
+			{ created: 1, url: 1, json_metadata: 1}
+		).toArray(function(err, docs) {
+
+			if(!err){
+				db.close()
+				console.log("MongoDb [D]")
+
+				var posts = []
+
+				docs.forEach(function(value) {
+					var post = parsePost(value.created, value.url, value.json_metadata)
+
+					posts.push(post)
+				})
+				
+				callback(posts)	
+			}		
+		})
+	})
+
+}
+
 var findTransfers = function(callback) {
-	var uri = 'mongodb://steemit:steemit@mongo0.steemdata.com/Steem'
+	var uri = 'mongodb://steemit:steemit@mongo1.steemdata.com/SteemData'
 
 	MongoClient.connect(uri, function(err, db) {
 		assert.equal(null, err);
 		
 		console.log("MongoDb [C]");
 
-		db.collection('VirtualOperations').find({
+		db.collection('Operations').find({
 			//'account': 'gutzofter',
 			'type': 'transfer',
 			'to': 'msteem',
@@ -32,7 +77,6 @@ var findTransfers = function(callback) {
 				console.log("MongoDb [D]")
 				
 				var links = []
-
 
 				docs.forEach(function(value){	
 					var jsonMemo = safelyParseJSON(value.memo)
@@ -53,7 +97,25 @@ var findTransfers = function(callback) {
 	// "type" : "bookmark",
 	// "action" : "add",
 	// "version" : "00",
-	
+var parsePost = function(createDate, url, json_metadata) {
+	var post = {}
+
+	post['createDate'] = createDate
+	post['url'] = 'https://steemit.com' + url
+	post['links'] = []
+
+
+	if(!isEmptyObject(json_metadata))
+	{
+		if(!isEmptyObject(json_metadata.links))
+		{
+			post['links'] = json_metadata.links
+		}
+	}
+
+	return post
+}	
+
 var parseMemo2Link = function(id, timestamp, from, memo){
 	var link = {}
 
