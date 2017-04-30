@@ -21,9 +21,11 @@ app.get('/api/active_posts', function(req, res, next) {
 })
 
 var activePosts = function(callback) {
-	var uri = 'mongodb://steemit:steemit@mongo1.steemdata.com/SteemData'
+	var uriSteemData = 'mongodb://steemit:steemit@mongo1.steemdata.com/SteemData'
 
-	MongoClient.connect(uri, function(err, db) {
+	var posts = []
+
+	MongoClient.connect(uriSteemData, function(err, db) {
 		assert.equal(null, err);		
 		console.log("MongoDb [C]");
 
@@ -43,8 +45,6 @@ var activePosts = function(callback) {
 				db.close()
 				console.log("MongoDb [D]")
 
-				var posts = []
-
 				docs.forEach(function(value) {
 					var post = parsePost(value.created, value.url, value.json_metadata)
 
@@ -59,9 +59,9 @@ var activePosts = function(callback) {
 }
 
 var findTransfers = function(callback) {
-	var uri = 'mongodb://steemit:steemit@mongo1.steemdata.com/SteemData'
+	var uriSteemData = 'mongodb://steemit:steemit@mongo1.steemdata.com/SteemData'
 
-	MongoClient.connect(uri, function(err, db) {
+	MongoClient.connect(uriSteemData, function(err, db) {
 		assert.equal(null, err);
 		
 		console.log("MongoDb [C]");
@@ -103,6 +103,7 @@ var parsePost = function(createDate, url, json_metadata) {
 	post['createDate'] = createDate
 	post['url'] = 'https://steemit.com' + url
 	post['links'] = []
+	post['tags'] = []
 
 
 	if(!isEmptyObject(json_metadata))
@@ -110,6 +111,7 @@ var parsePost = function(createDate, url, json_metadata) {
 		if(!isEmptyObject(json_metadata.links))
 		{
 			post['links'] = json_metadata.links
+			post['tags'] = json_metadata.tags
 		}
 	}
 
