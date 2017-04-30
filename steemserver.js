@@ -32,9 +32,6 @@ var activePosts = function(callback) {
 		var sevenDays = (24*60*60*1000) * 7
 		var offSetDate = new Date(dateNow - sevenDays)
 
-		console.log("Now: " + dateNow)
-		console.log("Offset: " + offSetDate)
-
 		db.collection('Posts').find(
 			{ 
 				created: { $gte: offSetDate }
@@ -49,10 +46,12 @@ var activePosts = function(callback) {
 				var posts = []
 
 				docs.forEach(function(value) {
-					parseLinks
+					var post = parsePost(value.created, value.url, value.json_metadata)
+
+					posts.push(post)
 				})
 				
-				callback(docs)	
+				callback(posts)	
 			}		
 		})
 	})
@@ -98,8 +97,23 @@ var findTransfers = function(callback) {
 	// "type" : "bookmark",
 	// "action" : "add",
 	// "version" : "00",
-var parseLink() {
+var parsePost = function(createDate, url, json_metadata) {
+	var post = {}
 
+	post['createDate'] = createDate
+	post['url'] = 'https://steemit.com' + url
+	post['links'] = []
+
+
+	if(!isEmptyObject(json_metadata))
+	{
+		if(!isEmptyObject(json_metadata.links))
+		{
+			post['links'] = json_metadata.links
+		}
+	}
+
+	return post
 }	
 
 var parseMemo2Link = function(id, timestamp, from, memo){
