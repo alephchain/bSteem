@@ -37,7 +37,11 @@ var update = function(posts) {
 		assert.equal(null, err);		
 		console.log("localhost [C]");
 
+
+
 		db.collection('Posts', function(err, collection) {
+
+			collection.remove();
 
 			posts.forEach(function(post) {
 
