@@ -3,7 +3,7 @@ var assert = require('assert');
 var express = require('express')
 var bodyParser = require('body-parser')
 
-var initialOffsetDays = 8
+var initialOffsetDays = 2
 
 var lastDateOffset = (24*60*60*1000) * initialOffsetDays
 var lastRequestOffsetDate = new Date(new Date() - lastDateOffset)
@@ -25,9 +25,35 @@ app.get('/api/history', function(req, res, next) {
 app.get('/api/active_posts', function(req, res, next) {
 	activePosts(function(posts){
 		console.log("Found: " + posts.length)
+		update(posts)
 		res.json(posts)
 	})
 })
+
+var update = function(posts) {
+	var urimSteem = 'mongodb://localhost/mSteem'
+
+	MongoClient.connect(urimSteem, function(err, db) {
+		assert.equal(null, err);		
+		console.log("localhost [C]");
+
+		db.collection('Posts', function(err, collection) {
+
+			posts.forEach(function(post) {
+
+			collection.insert(post)
+
+			})
+
+			if(!err){
+				db.close()
+				console.log("localhost [D]")
+			}
+		})
+
+	})
+
+}
 
 var activePosts = function(callback) {
 	var uriSteemData = 'mongodb://steemit:steemit@mongo1.steemdata.com/SteemData'
@@ -36,7 +62,7 @@ var activePosts = function(callback) {
 
 	MongoClient.connect(uriSteemData, function(err, db) {
 		assert.equal(null, err);		
-		console.log("MongoDb [C]");
+		console.log("SteemData [C]");
 
 
 		var dateNow =  new Date();
@@ -61,7 +87,7 @@ var activePosts = function(callback) {
 
 			if(!err){
 				db.close()
-				console.log("MongoDb [D]")
+				console.log("SteemData [D]")
 
 				docs.forEach(function(value) {
 					var post = parsePost(value.created, value.author, value.url, value.json_metadata)
@@ -70,6 +96,7 @@ var activePosts = function(callback) {
 				})
 
 				lastPosts = insertPosts(sevenDayoffSetDate, newPosts)
+
 				
 				callback(lastPosts)	
 			}		
