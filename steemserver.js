@@ -3,7 +3,7 @@ var assert = require('assert');
 var express = require('express')
 var bodyParser = require('body-parser')
 
-var initialOffsetDays = 2
+var initialOffsetDays = 8
 
 var lastDateOffset = (24*60*60*1000) * initialOffsetDays
 var lastRequestOffsetDate = new Date(new Date() - lastDateOffset)
@@ -36,8 +36,6 @@ var update = function(posts) {
 	MongoClient.connect(urimSteem, function(err, db) {
 		assert.equal(null, err);		
 		console.log("localhost [C]");
-
-
 
 		db.collection('Posts', function(err, collection) {
 
