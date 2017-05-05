@@ -6,5 +6,25 @@
     "mongodb": "^2.2.21",
     "mongodb-schema": "^6.0.2",
     "mongoose": "^4.7.7"
-  }
+  },
+  "description": "Allow display of bookmarks sent via transfer to msteem account",
+  "version": "1.0.0",
+  "main": "steemserver.js",
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/alephchain/bSteem.git"
+  },
+  "keywords": [
+    "mSteem"
+  ],
+  "author": "gutzofter",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/alephchain/bSteem/issues"
+  },
+  "homepage": "https://github.com/alephchain/bSteem#readme"
 }
