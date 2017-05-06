@@ -5,7 +5,8 @@
     "express": "^4.14.0",
     "mongodb": "^2.2.21",
     "mongodb-schema": "^6.0.2",
-    "mongoose": "^4.7.7"
+    "mongoose": "^4.7.7",
+    "node-sortable": "^0.1.10"
   },
   "description": "Allow display of bookmarks sent via transfer to msteem account",
   "version": "1.0.0",
