@@ -25,102 +25,26 @@ app.get('/api/history', function(req, res, next) {
 app.get('/api/active_posts', function(req, res, next) {
 	activePosts(function(posts){
 		console.log("Found: " + posts.length)
-		update(posts)
 		res.json(posts)
 	})
 })
 
-var update = function(posts) {
+var activePosts = function(callback) {
 	var urimSteem = 'mongodb://localhost/mSteem'
-
 	MongoClient.connect(urimSteem, function(err, db) {
-		assert.equal(null, err);		
-		console.log("localhost [C]");
+		assert.equal(null, err)	
+		console.log("localhost [C]")
 
-		db.collection('Posts', function(err, collection) {
+		db.collection('Posts').find({}).toArray(function(err, docs) {
 
-			collection.remove();
-
-			posts.forEach(function(post) {
-
-			collection.insert(post)
-
-			})
-
-			if(!err){
+			if(!err) {
 				db.close()
 				console.log("localhost [D]")
-			}
-		})
 
-	})
-
-}
-
-var activePosts = function(callback) {
-	var uriSteemData = 'mongodb://steemit:steemit@mongo1.steemdata.com/SteemData'
-
-	var newPosts = []
-
-	MongoClient.connect(uriSteemData, function(err, db) {
-		assert.equal(null, err);		
-		console.log("SteemData [C]");
-
-
-		var dateNow =  new Date();
-
-		var sevenDayoffSetDate = new Date(dateNow - sevenDays)
-
-		var	offSetDate = lastRequestOffsetDate
-
-		if(sevenDays < lastDateOffset)
-		{
-			offSetDate = sevenDayoffSetDate
-		}
-
-		lastDateOffset = dateNow - offSetDate
-
-		lastRequestOffsetDate = dateNow
-
-		db.collection('Posts').find(
-			{ created: { $gte: offSetDate } }, 
-			{ created: 1, author: 1, url: 1, json_metadata: 1 }
-		).toArray(function(err, docs) {
-
-			if(!err){
-				db.close()
-				console.log("SteemData [D]")
-
-				docs.forEach(function(value) {
-					var post = parsePost(value.created, value.author, value.url, value.json_metadata)
-
-					newPosts.push(post)
-				})
-
-				lastPosts = insertPosts(sevenDayoffSetDate, newPosts)
-
-				
-				callback(lastPosts)	
+				callback(docs)	
 			}		
 		})
 	})
-}
-
-var insertPosts = function(sevenDayoffSetDate, newPosts) {
-	var newLastPosts = []
-
-	lastPosts.forEach(function(post) {
-		if(post.createDate >= sevenDayoffSetDate)
-		{
-			newLastPosts.push(post)
-		}
-	})
-
-	newPosts.forEach(function(post) {
-		newLastPosts.push(post)
-	})
-
-	return newLastPosts
 }
 
 var findTransfers = function(callback) {
@@ -159,32 +83,6 @@ var findTransfers = function(callback) {
 		})
 	})
 }
-	// "type" : "bookmark",
-	// "action" : "add",
-	// "version" : "00",
-var parsePost = function(createDate, author, url, json_metadata) {
-	var post = {}
-
-	post = {
-		createDate: createDate,
-		author: author,
-		url: 'https://steemit.com' + url,
-		links: [],
-		tags: []
-	}
-
-	if(!isEmptyObject(json_metadata))
-	{
-		if(!isEmptyObject(json_metadata.links))
-		{
-			post['links'] = json_metadata.links
-			post['tags'] = json_metadata.tags
-		}
-	}
-
-	return post
-}	
-
 var parseMemo2Link = function(id, timestamp, from, memo){
 	var link = {}
 
@@ -220,6 +118,7 @@ function isEmptyObject(obj) {
   }
   return true;
 }
+
 app.listen(3000, function() {
 	console.log('Server: ', 3000)
 })

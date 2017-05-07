@@ -12,7 +12,6 @@ rank(nodes, linkProb, tolerance, function (err, res) {
 
     var sortResults = sort.quick(res, sort.ASC)
 
-	console.log(res)
 	console.log(sortResults)
 
-}, debug=true)
+}, debug=false)
