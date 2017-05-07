@@ -73,8 +73,9 @@ var activePosts = function(callback) {
 			if(!err){
 				db.close()
 				console.log("SteemData [D]")
+				console.log(lastDateOffset)
 
-				if(docs.length > 0) {
+				/*if(docs.length > 0) {
 					docs.forEach(function(value) {
 						var post = parsePost(value.created, value.author, value.url, value.json_metadata)
 
@@ -84,7 +85,15 @@ var activePosts = function(callback) {
 					lastPosts = insertPosts(sevenDayoffSetDate, newPosts)
 					
 				}
+				*/
 
+				docs.forEach(function(value) {
+					var post = parsePost(value.created, value.author, value.url, value.json_metadata)
+
+					newPosts.push(post)
+				})
+
+				lastPosts = insertPosts(sevenDayoffSetDate, newPosts)
 				callback(lastPosts)
 			}		
 		})
